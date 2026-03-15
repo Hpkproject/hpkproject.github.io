@@ -1,191 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>CORA</title>
-  <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.png" type="image/png">
-  <meta name="theme-color" content="#000000">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
-    * { margin:0; padding:0; box-sizing:border-box; }
-    html,body { width:100%; height:100%; background:#000; color:#fff; font-family:'Inter',sans-serif; display:flex; align-items:center; justify-content:center; }
-    #screen { display:flex; flex-direction:column; align-items:center; gap:20px; max-width:400px; width:100%; padding:32px; text-align:center; }
-    .app-icon { width:80px; height:80px; border-radius:20px; background:#0a0a0a; border:1px solid #1a1a1a; display:flex; align-items:center; justify-content:center; font-size:44px; flex-shrink:0; }
-    .app-icon img { width:100%; height:100%; border-radius:20px; object-fit:cover; }
-    .app-name { font-family:'Orbitron',sans-serif; font-weight:900; font-size:20px; letter-spacing:5px; }
-    .app-sub { font-size:12px; color:#444; line-height:1.8; }
-    .btn { width:100%; padding:13px; border-radius:8px; border:none; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; background:#fff; color:#000; transition:background .2s; }
-    .btn:hover { background:#ddd; }
-    .btn-outline { background:transparent; color:#888; border:1px solid #1e1e1e; }
-    .btn-outline:hover { border-color:#333; color:#ccc; }
-    .status { font-size:11px; color:#333; min-height:16px; }
-    .status.err { color:#cc4444; }
-    .status.ok { color:#00cc66; }
-    .spinner { width:24px; height:24px; border:2px solid #111; border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .hidden { display:none !important; }
-    .info-box { font-size:11px; color:#2a2a2a; line-height:1.9; text-align:left; background:#080808; border:1px solid #141414; border-radius:8px; padding:12px 14px; width:100%; }
-    .info-box strong { color:#444; }
-    .divider { width:100%; border:none; border-top:1px solid #0e0e0e; }
-    .url-input { width:100%; padding:10px 12px; background:#0a0a0a; border:1px solid #1e1e1e; border-radius:8px; color:#ccc; font-family:'Inter',sans-serif; font-size:12px; outline:none; transition:border-color .15s; }
-    .url-input:focus { border-color:#333; }
-    .url-input::placeholder { color:#2a2a2a; }
-    .url-label { font-size:11px; color:#333; text-align:left; width:100%; }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{width:100%;height:100%;background:#000;color:#fff;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;}
+    #screen{display:flex;flex-direction:column;align-items:center;gap:20px;max-width:400px;width:100%;padding:32px;text-align:center;}
+    .app-icon{width:72px;height:72px;border-radius:18px;background:#111;border:1px solid #1a1a1a;display:flex;align-items:center;justify-content:center;font-size:38px;flex-shrink:0;}
+    .app-icon img{width:100%;height:100%;border-radius:18px;object-fit:cover;}
+    .app-name{font-family:'Orbitron',sans-serif;font-weight:900;font-size:16px;letter-spacing:3px;}
+    .app-sub{font-size:12px;color:#444;line-height:1.8;}
+    .btn{width:100%;padding:12px;border-radius:8px;border:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#000;transition:background .2s;}
+    .btn:hover{background:#ddd;}.btn-outline{background:transparent;color:#888;border:1px solid #1e1e1e;}
+    .btn-outline:hover{border-color:#333;color:#ccc;}
+    .status{font-size:11px;color:#333;min-height:16px;}.status.err{color:#cc4444;}.status.ok{color:#00cc66;}
+    .spinner{width:22px;height:22px;border:2px solid #111;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}.hidden{display:none!important;}
+    .info-box{font-size:11px;color:#2a2a2a;line-height:1.9;text-align:left;background:#0a0a0a;border:1px solid #141414;border-radius:8px;padding:12px 14px;width:100%;}
+    .info-box strong{color:#444;}.divider{width:100%;border:none;border-top:1px solid #0e0e0e;}
+    .field{display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;}.field label{font-size:11px;color:#333;}
+    .url-input{width:100%;padding:10px 12px;background:#0a0a0a;border:1px solid #1e1e1e;border-radius:8px;color:#ccc;font-family:'Inter',sans-serif;font-size:12px;outline:none;transition:border-color .15s;}
+    .url-input:focus{border-color:#333;}.url-input::placeholder{color:#2a2a2a;}
   </style>
 </head>
 <body>
 <div id="screen">
   <div class="app-icon"><img src="icon.png" alt="" onerror="this.parentElement.textContent='🚀'"></div>
   <div class="app-name">CORA</div>
-
-  <!-- State: setup needed -->
   <div id="state-setup" style="display:none;flex-direction:column;gap:14px;width:100%;align-items:center">
-    <div class="app-sub">Paste your CORA project URL to get started.</div>
-    <div class="info-box">
-      Open your project folder in File Explorer, copy the path from the address bar,
-      then paste it below with <strong>file:///</strong> at the start.<br><br>
-      Example: <strong style="color:#333">file:///C:/Users/you/Projects/hpkproject/</strong><br><br>
-      This is saved — future launches are instant.
-    </div>
-    <div class="url-label">CORA project root URL</div>
-    <input class="url-input" id="url-input" type="text" placeholder="file:///C:/Users/you/Projects/hpkproject/" spellcheck="false" autocomplete="off" />
-    <button class="btn" id="btn-save-url">▶ Launch CORA</button>
+    <div class="app-sub">Paste the URL to your CORA apps folder.</div>
+    <div class="info-box">Point this directly at the folder containing all your CORA apps.<br><br>Example: <strong>file:///C:/Users/you/Projects/myproject/CORA-fs/</strong><br><br>Saved once &mdash; all wrappers share it.</div>
+    <div class="field"><label>CORA apps folder URL</label><input class="url-input" id="url-input" type="text" placeholder="file:///C:/Users/you/Projects/myproject/CORA-fs/" spellcheck="false" autocomplete="off"/></div>
+    <button class="btn" id="btn-save">&#9654; Launch CORA</button>
     <div class="status" id="setup-status"></div>
   </div>
-
-  <!-- State: launching -->
-  <div id="state-launching" class="hidden" style="flex-direction:column;align-items:center;gap:16px">
-    <div class="spinner"></div>
-    <div class="status ok" id="launch-msg">Launching CORA…</div>
+  <div id="state-launching" class="hidden" style="flex-direction:column;align-items:center;gap:14px">
+    <div class="spinner"></div><div class="status ok" id="launch-msg">Launching CORA&hellip;</div>
   </div>
-
-  <!-- State: resume -->
   <div id="state-resume" class="hidden" style="flex-direction:column;gap:14px;width:100%;align-items:center">
-    <div class="app-sub">CORA URL remembered. Tap to open.</div>
-    <button class="btn" id="btn-resume">▶ Open CORA</button>
+    <div class="app-sub" id="resume-sub">Apps folder remembered.</div>
+    <button class="btn" id="btn-resume">&#9654; Open CORA</button>
     <hr class="divider">
-    <button class="btn btn-outline" id="btn-change">✎ Change URL</button>
+    <button class="btn btn-outline" id="btn-change">&#10000; Change URL</button>
     <div class="status" id="resume-status"></div>
   </div>
 </div>
-
 <script>
 'use strict';
-
-const APP_ENTRY = 'CORA-fs/cora-launch/index.html';
-const APP_LABEL = 'CORA';
-
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
-
-/* ── CoraSystemDB — shared across all wrappers ── */
-function openDB() {
-  return new Promise((res, rej) => {
-    const r = indexedDB.open('CoraSystemDB', 1);
-    r.onerror = () => rej(r.error);
-    r.onsuccess = () => res(r.result);
-    r.onupgradeneeded = e => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains('coraHandles'))
-        db.createObjectStore('coraHandles', { keyPath: 'id' });
-    };
-  });
-}
-
-async function saveUrl(url) {
-  try {
-    const db = await openDB();
-    await new Promise((res, rej) => {
-      const tx = db.transaction(['coraHandles'], 'readwrite');
-      const req = tx.objectStore('coraHandles').put({ id: 'coraBaseUrl', url });
-      req.onsuccess = res; req.onerror = () => rej(req.error);
-    });
-  } catch (_) {}
-}
-
-async function loadUrl() {
-  try {
-    const db = await openDB();
-    return await new Promise(res => {
-      const tx = db.transaction(['coraHandles'], 'readonly');
-      const req = tx.objectStore('coraHandles').get('coraBaseUrl');
-      req.onsuccess = () => res(req.result?.url || null);
-      req.onerror = () => res(null);
-    });
-  } catch { return null; }
-}
-
-/* ── Elements ── */
-const stateSetup     = document.getElementById('state-setup');
-const stateLaunching = document.getElementById('state-launching');
-const stateResume    = document.getElementById('state-resume');
-const setupStatus    = document.getElementById('setup-status');
-const resumeStatus   = document.getElementById('resume-status');
-const launchMsg      = document.getElementById('launch-msg');
-const urlInput       = document.getElementById('url-input');
-
-function showErr(el, m) { el.textContent = m; el.className = 'status err'; }
-function showOk(el, m)  { el.textContent = m; el.className = 'status ok';  }
-
-/* ── Normalise URL: ensure trailing slash ── */
-function normaliseUrl(raw) {
-  let u = raw.trim();
-  // Convert backslash paths to forward slashes
-  u = u.replace(/\\/g, '/');
-  // If it looks like a bare Windows path (C:/...), prepend file:///
-  if (/^[a-zA-Z]:\//.test(u)) u = 'file:///' + u;
-  if (!u.endsWith('/')) u += '/';
-  return u;
-}
-
-async function doLaunch(baseUrl) {
-  await saveUrl(baseUrl);
-  stateSetup.style.display = 'none';
-  stateResume.classList.add('hidden');
-  stateLaunching.style.display = 'flex';
-  launchMsg.textContent = `Launching ${APP_LABEL}…`;
-  await new Promise(r => setTimeout(r, 400));
-  const target = baseUrl + APP_ENTRY;
-  const w = window.open(target, '_blank');
-  if (!w) {
-    // Popup blocked — fall back to same-tab navigation
-    window.location.href = target;
-  }
-}
-
-function goSetup() {
-  stateResume.classList.add('hidden');
-  stateLaunching.classList.add('hidden');
-  stateSetup.style.display = 'flex';
-}
-
-async function boot() {
-  const saved = await loadUrl();
-  if (saved) {
-    stateResume.style.display = 'flex';
-    document.getElementById('btn-resume').addEventListener('click', () => doLaunch(saved), { once: true });
-    document.getElementById('btn-change').addEventListener('click', goSetup, { once: true });
-  } else {
-    stateSetup.style.display = 'flex';
-  }
-}
-
-document.getElementById('btn-save-url').addEventListener('click', () => {
-  const raw = urlInput.value;
-  if (!raw.trim()) { showErr(setupStatus, 'Please enter a URL.'); return; }
-  try {
-    const url = normaliseUrl(raw);
-    doLaunch(url);
-  } catch (e) {
-    showErr(setupStatus, 'Invalid URL: ' + e.message);
-  }
-});
-
-urlInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('btn-save-url').click();
-});
-
+const APP_ENTRY='cora-launch/index.html',APP_LABEL='CORA',LS_KEY='coraBaseUrl';
+function saveUrl(url){try{localStorage.setItem(LS_KEY,url);}catch(_){}}
+function loadUrl(){try{return localStorage.getItem(LS_KEY)||null;}catch{return null;}}
+const stateSetup=document.getElementById('state-setup'),stateLaunching=document.getElementById('state-launching'),stateResume=document.getElementById('state-resume'),setupStatus=document.getElementById('setup-status'),launchMsg=document.getElementById('launch-msg'),urlInput=document.getElementById('url-input');
+function showErr(m){setupStatus.textContent=m;setupStatus.className='status err';}
+function normalise(raw){let u=raw.trim().replace(/\\/g,'/');if(/^[a-zA-Z]:\//.test(u))u='file:///'+u;if(!u.endsWith('/'))u+='/';return u;}
+async function doLaunch(base){saveUrl(base);stateSetup.style.display='none';stateResume.classList.add('hidden');stateLaunching.style.display='flex';launchMsg.textContent='Launching '+APP_LABEL+'\u2026';await new Promise(r=>setTimeout(r,400));window.open(base+APP_ENTRY,'_blank');window.close();}
+function goSetup(){stateResume.classList.add('hidden');stateLaunching.classList.add('hidden');stateSetup.style.display='flex';}
+function boot(){const saved=loadUrl();if(saved){document.getElementById('resume-sub').textContent=saved;stateResume.style.display='flex';document.getElementById('btn-resume').addEventListener('click',()=>doLaunch(saved),{once:true});document.getElementById('btn-change').addEventListener('click',goSetup,{once:true});}else{stateSetup.style.display='flex';}}
+document.getElementById('btn-save').addEventListener('click',()=>{const raw=urlInput.value;if(!raw.trim()){showErr('Please enter a URL.');return;}try{doLaunch(normalise(raw));}catch(e){showErr('Invalid URL: '+e.message);}});
+urlInput.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-save').click();});
 boot();
 </script>
 </body>
