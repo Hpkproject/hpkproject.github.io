@@ -146,7 +146,12 @@ async function doLaunch(baseUrl) {
   stateLaunching.style.display = 'flex';
   launchMsg.textContent = `Launching ${APP_LABEL}…`;
   await new Promise(r => setTimeout(r, 400));
-  window.location.href = baseUrl + APP_ENTRY;
+  const target = baseUrl + APP_ENTRY;
+  const w = window.open(target, '_blank');
+  if (!w) {
+    // Popup blocked — fall back to same-tab navigation
+    window.location.href = target;
+  }
 }
 
 function goSetup() {
