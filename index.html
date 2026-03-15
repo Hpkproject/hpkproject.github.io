@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CORA — Chrome OS Replacement Apps</title>
+  <link rel="icon" href="../icon.png" type="image/png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg:      #060606;
+      --surface: #0c0c0c;
+      --border:  #141414;
+      --muted:   #444;
+      --dim:     #1c1c1c;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+    /* ── Stars ── */
+    #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 48px;
+      background: rgba(6,6,6,.96);
+      border-bottom: 1px solid #0c0c0c;
+      backdrop-filter: blur(8px);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; }
+    .nav-logo img { width: 28px; height: 28px; border-radius: 7px; }
+    .nav-logo span { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 14px; letter-spacing: 3px; }
+    .nav-dl {
+      padding: 9px 22px; border-radius: 7px; background: #fff; color: #000;
+      text-decoration: none; font-size: 12px; font-weight: 700;
+      transition: background .2s;
+    }
+    .nav-dl:hover { background: #ddd; }
+
+    /* ── Hero ── */
+    #hero {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+    }
+
+    .hero-icon {
+      width: 100px; height: 100px; border-radius: 24px;
+      box-shadow: 0 0 60px rgba(255,255,255,.06);
+      margin-bottom: 32px;
+      object-fit: contain;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px; letter-spacing: 5px; text-transform: uppercase; color: var(--muted);
+      margin-bottom: 18px;
+      font-weight: 500;
+    }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: clamp(36px, 6vw, 72px);
+      letter-spacing: .03em;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      background: linear-gradient(160deg, #fff 40%, #555);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-tagline {
+      font-size: clamp(16px, 2.2vw, 22px);
+      color: #666;
+      max-width: 620px;
+      line-height: 1.65;
+      margin-bottom: 48px;
+    }
+
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+
+    .btn-hero {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 14px 32px; border-radius: 10px; border: none;
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700;
+      text-decoration: none; cursor: pointer; transition: all .2s;
+    }
+    .btn-hero-primary { background: #fff; color: #000; }
+    .btn-hero-primary:hover { background: #ddd; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,255,255,.12); }
+    .btn-hero-secondary { background: transparent; color: #555; border: 1px solid #1a1a1a; }
+    .btn-hero-secondary:hover { border-color: #333; color: #999; }
+
+    .hero-scroll-hint { margin-top: 72px; color: var(--dim); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; animation: bob 2s ease-in-out infinite; }
+    @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
+    /* ── Section ── */
+    section { position: relative; z-index: 1; padding: 100px 48px; max-width: 1100px; margin: 0 auto; }
+
+    .section-label { font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .section-title { font-family: 'Orbitron', sans-serif; font-size: clamp(22px, 3vw, 38px); font-weight: 900; margin-bottom: 20px; }
+    .section-body { font-size: 15px; color: #666; line-height: 1.8; max-width: 620px; }
+
+    /* ── Feature grid ── */
+    #features .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 56px; }
+    .feat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 30px 28px; transition: border-color .2s, transform .2s; }
+    .feat-card:hover { border-color: #222; transform: translateY(-3px); }
+    .feat-ico { font-size: 36px; margin-bottom: 18px; }
+    .feat-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+    .feat-desc { font-size: 13px; color: #555; line-height: 1.65; }
+
+    /* ── What CORA is ── */
+    #what .callout {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 44px;
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+    }
+    @media (max-width: 680px) { #what .callout { grid-template-columns: 1fr; } nav { padding: 12px 20px; } section { padding: 60px 20px; } }
+    .callout-col h3 { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+    .callout-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .callout-list li { font-size: 13px; color: #666; padding-left: 18px; position: relative; line-height: 1.55; }
+    .callout-list li::before { content: ''; position: absolute; left: 0; top: 8px; width: 5px; height: 5px; border-radius: 50%; }
+    .cok li::before  { background: #00cc66; }
+    .cno li::before  { background: #333; }
+
+    /* ── Open source ── */
+    #open-source { text-align: center; }
+    #open-source .section-body { margin: 0 auto; text-align: center; }
+    #open-source .gh-link {
+      display: inline-flex; align-items: center; gap: 9px; margin-top: 28px;
+      padding: 12px 26px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border);
+      color: #888; text-decoration: none; font-size: 13px; font-weight: 600;
+      transition: all .2s;
+    }
+    #open-source .gh-link:hover { border-color: #333; color: #fff; }
+
+    /* ── Download CTA ── */
+    #download {
+      text-align: center;
+      padding: 100px 24px;
+    }
+    #download .section-title { font-size: clamp(28px, 4vw, 52px); margin-bottom: 16px; }
+    #download .section-body { margin: 0 auto 44px; text-align: center; }
+    #download .dl-note { font-size: 11px; color: var(--dim); margin-top: 14px; letter-spacing: 1px; }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid #0d0d0d;
+      padding: 28px 48px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .foot-logo { display: flex; align-items: center; gap: 8px; }
+    .foot-logo img { width: 20px; height: 20px; border-radius: 5px; }
+    .foot-logo span { font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 3px; color: #333; }
+    footer p { font-size: 11px; color: #1e1e1e; }
+    footer a { color: #333; text-decoration: none; }
+    footer a:hover { color: #666; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- Stars -->
+<canvas id="starfield"></canvas>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">
+    <img src="../icon.png" alt="CORA" onerror="this.style.display='none'">
+    <span>CORA</span>
+  </div>
+  <a class="nav-dl" href="https://hpkproject.github.io/Cora_Installer/download.zip" download>Download</a>
+</nav>
+
+<!-- Hero -->
+<div id="hero">
+  <p class="hero-eyebrow">Introducing</p>
+  <img class="hero-icon" src="../icon.png" alt="CORA" onerror="this.style.display='none'">
+  <h1>CORA</h1>
+  <p class="hero-tagline">
+    Tired of your boring old Chromebook?<br>Well, try CORA.
+  </p>
+  <div class="hero-actions">
+    <a class="btn-hero btn-hero-primary" href="https://hpkproject.github.io/Cora_Installer/download.zip" download>
+      &#8659;&nbsp; Download CORA
+    </a>
+    <a class="btn-hero btn-hero-secondary" href="https://github.com/Hpkproject" target="_blank" rel="noopener">
+      GitHub &rarr;
+    </a>
+  </div>
+  <div class="hero-scroll-hint">&#8595;&nbsp; learn more</div>
+</div>
+
+<!-- What CORA is -->
+<section id="what">
+  <div class="section-label">What is CORA?</div>
+  <h2 class="section-title">Replace Chrome OS,<br>not your Chromebook</h2>
+  <p class="section-body">
+    CORA is a collection of web-based apps that replace the built-in Chrome OS applications and its app store —
+    running right in your browser using the File System Access API. No Linux VM. No Android support required.
+    Just your Chromebook.
+  </p>
+
+  <div class="callout">
+    <div class="callout-col">
+      <h3>CORA replaces</h3>
+      <ul class="callout-list cok">
+        <li>The Chrome OS file manager</li>
+        <li>The Chrome Web Store</li>
+        <li>The built-in terminal</li>
+        <li>Default system utilities</li>
+      </ul>
+    </div>
+    <div class="callout-col">
+      <h3>No need for</h3>
+      <ul class="callout-list cno">
+        <li>Linux developer mode</li>
+        <li>Android app support</li>
+        <li>Powerwash or OS changes</li>
+        <li>Any installs or extensions</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <div class="section-label">Features</div>
+  <h2 class="section-title">Everything you need</h2>
+  <div class="grid">
+    <div class="feat-card">
+      <div class="feat-ico">📁</div>
+      <div class="feat-title">CORA Files</div>
+      <div class="feat-desc">A full-featured file manager. Browse, create, rename, and delete files — with ZIP archive support built in.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-ico">⌨</div>
+      <div class="feat-title">CORA Terminal</div>
+      <div class="feat-desc">WebTerm brings a terminal-like experience to your browser. Run commands against your local filesystem without Linux.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-ico">🚀</div>
+      <div class="feat-title">CORA Launcher</div>
+      <div class="feat-desc">A fullscreen app launcher for all your CORA apps, with a search bar and direct filesystem access.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-ico">🛍</div>
+      <div class="feat-title">CORA Store</div>
+      <div class="feat-desc">Browse and install community-made CORA apps. Apps download and extract directly to your CORA filesystem.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-ico">🔒</div>
+      <div class="feat-title">Private by Design</div>
+      <div class="feat-desc">Everything runs locally in your browser. No data is sent to any server. Your files never leave your device.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-ico">🧩</div>
+      <div class="feat-title">Extensible</div>
+      <div class="feat-desc">CORA is built as a platform. Developers can publish apps to the CORA Store with a simple zip and JSON entry.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Open Source -->
+<section id="open-source">
+  <div class="section-label">Open Source</div>
+  <h2 class="section-title">Built in the open</h2>
+  <p class="section-body">
+    CORA is fully open source. View the code, submit issues, or contribute your own apps and improvements on GitHub.
+  </p>
+  <a class="gh-link" href="https://github.com/Hpkproject" target="_blank" rel="noopener">
+    &#128279;&nbsp; github.com/Hpkproject
+  </a>
+</section>
+
+<!-- Download CTA -->
+<section id="download">
+  <div class="section-label">Get Started</div>
+  <h2 class="section-title">Download CORA</h2>
+  <p class="section-body">
+    Run the CORA Setup wizard, select a folder on your Chromebook, and you're up and running in seconds.
+  </p>
+  <div>
+    <a class="btn-hero btn-hero-primary" href="https://hpkproject.github.io/Cora_Installer/download.zip" download>
+      &#8659;&nbsp; Download CORA Installer
+    </a>
+    <p class="dl-note">ZIP &nbsp;·&nbsp; No install required &nbsp;·&nbsp; Runs in Chrome</p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="foot-logo">
+    <img src="../icon.png" alt="" onerror="this.style.display='none'">
+    <span>CORA</span>
+  </div>
+  <p>Open source &mdash; <a href="https://github.com/Hpkproject" target="_blank" rel="noopener">github.com/Hpkproject</a></p>
+</footer>
+
+<script>
+/* ── Starfield canvas ─────────────────────────────────── */
+(function () {
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = document.body.scrollHeight || window.innerHeight;
+  }
+
+  function init() {
+    resize();
+    stars = Array.from({ length: 120 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.2 + 0.3,
+      o: Math.random() * 0.25 + 0.03,
+      s: Math.random() * 0.008 + 0.002,
+      d: Math.random() > .5 ? 1 : -1
+    }));
+    draw();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${s.o})`;
+      ctx.fill();
+      s.o += s.s * s.d;
+      if (s.o >= 0.3 || s.o <= 0.02) s.d *= -1;
+    }
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', init);
+  init();
+})();
+</script>
+</body>
+</html>
