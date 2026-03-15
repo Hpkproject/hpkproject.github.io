@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CORA</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.png" type="image/png">
+  <meta name="theme-color" content="#000000">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { width:100%; height:100%; background:#000; color:#fff; font-family:'Inter',sans-serif; display:flex; align-items:center; justify-content:center; }
+    #screen { display:flex; flex-direction:column; align-items:center; gap:20px; max-width:380px; width:100%; padding:32px; text-align:center; }
+    .app-icon { width:80px; height:80px; border-radius:20px; background:#0a0a0a; border:1px solid #1a1a1a; display:flex; align-items:center; justify-content:center; font-size:44px; flex-shrink:0; }
+    .app-icon img { width:100%; height:100%; border-radius:20px; object-fit:cover; }
+    .app-name { font-family:'Orbitron',sans-serif; font-weight:900; font-size:20px; letter-spacing:5px; }
+    .app-sub { font-size:12px; color:#444; line-height:1.8; }
+    .btn { width:100%; padding:13px; border-radius:8px; border:none; font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer; background:#fff; color:#000; transition:background .2s; }
+    .btn:hover { background:#ddd; }
+    .btn-outline { background:transparent; color:#888; border:1px solid #1e1e1e; }
+    .btn-outline:hover { border-color:#333; color:#ccc; }
+    .status { font-size:11px; color:#333; }
+    .status.err { color:#cc4444; }
+    .status.ok { color:#00cc66; }
+    .spinner { width:24px; height:24px; border:2px solid #111; border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .hidden { display:none !important; }
+    .info-box { font-size:11px; color:#2a2a2a; line-height:1.9; text-align:left; background:#080808; border:1px solid #141414; border-radius:8px; padding:12px 14px; width:100%; }
+    .info-box strong { color:#444; }
+    .divider { width:100%; border:none; border-top:1px solid #0e0e0e; }
+  </style>
+</head>
+<body>
+<div id="screen">
+  <div class="app-icon"><img src="icon.png" alt="" onerror="this.parentElement.textContent='🚀'"></div>
+  <div class="app-name">CORA</div>
+
+  <!-- State: setup needed -->
+  <div id="state-setup" style="display:flex;flex-direction:column;gap:14px;width:100%;align-items:center">
+    <div class="app-sub">Select your CORA filesystem folder to launch.</div>
+    <div class="info-box">
+      Click <strong>Select CORA Folder</strong> and choose your <strong>CORA-fs</strong> folder.
+      This is saved so future launches are instant.
+    </div>
+    <button class="btn" id="btn-pick">📂 Select CORA Folder</button>
+    <div class="status" id="setup-status"></div>
+  </div>
+
+  <!-- State: launching -->
+  <div id="state-launching" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:16px">
+    <div class="spinner"></div>
+    <div class="status ok" id="launch-msg">Launching CORA…</div>
+  </div>
+
+  <!-- State: resume -->
+  <div id="state-resume" class="hidden" style="display:flex;flex-direction:column;gap:14px;width:100%;align-items:center">
+    <div class="app-sub">CORA folder remembered. Tap to open.</div>
+    <button class="btn" id="btn-resume">▶ Open CORA</button>
+    <hr class="divider">
+    <button class="btn btn-outline" id="btn-change">📂 Change Folder</button>
+    <div class="status" id="resume-status"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// cora-launcher opens cora-launch/index.html inside CORA-fs
+const APP_ENTRY = 'cora-launch/index.html';
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+
+/* ── Cookie ── */
+function setCookie(n, v, d = 365) {
+  const e = new Date(Date.now() + d * 864e5).toUTCString();
+  document.cookie = `${n}=${encodeURIComponent(v)};expires=${e};path=/;SameSite=Lax`;
+}
+
+/* ── IndexedDB — shared CoraSystemDB (same DB as all CORA apps) ── */
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('CoraSystemDB', 1);
+    r.onerror = () => rej(r.error);
+    r.onsuccess = () => res(r.result);
+    r.onupgradeneeded = e => {
+      if (!e.target.result.objectStoreNames.contains('coraHandles'))
+        e.target.result.createObjectStore('coraHandles', { keyPath: 'id' });
+    };
+  });
+}
+
+async function saveHandle(h) {
+  try {
+    const db = await openDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction(['coraHandles'], 'readwrite');
+      const req = tx.objectStore('coraHandles').put({ id: 'coraRoot', handle: h });
+      req.onsuccess = res;
+      req.onerror = () => rej(req.error);
+    });
+  } catch (_) {}
+}
+
+async function loadHandle() {
+  try {
+    const db = await openDB();
+    return await new Promise(res => {
+      const tx = db.transaction(['coraHandles'], 'readonly');
+      const req = tx.objectStore('coraHandles').get('coraRoot');
+      req.onsuccess = () => res(req.result?.handle || null);
+      req.onerror = () => res(null);
+    });
+  } catch { return null; }
+}
+
+/* ── Elements ── */
+const stateSetup     = document.getElementById('state-setup');
+const stateLaunching = document.getElementById('state-launching');
+const stateResume    = document.getElementById('state-resume');
+const setupStatus    = document.getElementById('setup-status');
+const resumeStatus   = document.getElementById('resume-status');
+const launchMsg      = document.getElementById('launch-msg');
+
+function showErr(el, m) { el.textContent = m; el.className = 'status err'; }
+
+/* ── Base URL: wrappers/cora-launcher → ../../CORA-fs/ ── */
+function getBaseUrl() {
+  try {
+    return new URL('../../', window.location.href).href + 'CORA-fs/';
+  } catch { return null; }
+}
+
+async function doLaunch(handle) {
+  await saveHandle(handle);
+  setCookie('clw-setup', 'true');
+  const base = getBaseUrl();
+  if (!base) { showErr(setupStatus, 'Could not determine CORA-fs URL.'); return; }
+  stateSetup.classList.add('hidden');
+  stateResume.classList.add('hidden');
+  stateLaunching.style.display = 'flex';
+  launchMsg.textContent = 'Launching CORA…';
+  await new Promise(r => setTimeout(r, 500));
+  window.location.href = base + APP_ENTRY;
+}
+
+async function pickNew() {
+  try {
+    const h = await window.showDirectoryPicker({ mode: 'readwrite' });
+    await doLaunch(h);
+  } catch (e) {
+    if (e.name !== 'AbortError') showErr(setupStatus, 'Error: ' + e.message);
+  }
+}
+
+async function boot() {
+  const handle = await loadHandle();
+  if (!handle) {
+    stateSetup.style.display = 'flex';
+    return;
+  }
+  const perm = await handle.queryPermission({ mode: 'readwrite' });
+  if (perm === 'granted') {
+    await doLaunch(handle);
+  } else {
+    stateSetup.classList.add('hidden');
+    stateResume.style.display = 'flex';
+    document.getElementById('btn-resume').addEventListener('click', async () => {
+      const p = await handle.requestPermission({ mode: 'readwrite' });
+      if (p === 'granted') { await doLaunch(handle); }
+      else { showErr(resumeStatus, 'Permission denied. Try changing folder.'); }
+    }, { once: true });
+    document.getElementById('btn-change').addEventListener('click', pickNew, { once: true });
+  }
+}
+
+document.getElementById('btn-pick').addEventListener('click', pickNew);
+boot();
+</script>
+</body>
+</html>
